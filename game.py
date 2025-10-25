@@ -19,7 +19,8 @@ def create_pipe():
     gap_center_y = random.randint(GAP_CENTER_MIN, GAP_CENTER_MAX)
     bottom_pipe = pipe_surface.get_rect(midtop=(500, gap_center_y + GAP_SIZE // 2))
     top_pipe = pipe_surface.get_rect(midbottom=(500, gap_center_y - GAP_SIZE // 2))
-    return bottom_pipe, top_pipe
+    # Trả về cả vị trí tâm khoảng trống để tiện dùng khi sinh coin ở giữa khoảng trống
+    return bottom_pipe, top_pipe, gap_center_y
 
 # di chuyển ống
 def move_pipes(pipes):
@@ -37,21 +38,35 @@ def draw_pipe(pipes):
             screen.blit(flip_pipe,pipe)
 
 # tạo coin ngẫu nhiên
-def create_coin():
-    # Tạo coin ở vị trí an toàn giữa ống trên và ống dưới
-    GAP_SIZE = 260  
-    GAP_CENTER_MIN = 250
-    GAP_CENTER_MAX = 550
-    gap_center_y = random.randint(GAP_CENTER_MIN, GAP_CENTER_MAX)
-    
-    # Tính toán vị trí an toàn cho coin
-    # Coin sẽ xuất hiện ở giữa khoảng trống, cách ống ít nhất 400 pixel
-    safe_margin = 400
-    top_pipe_bottom = gap_center_y - GAP_SIZE // 2
-    bottom_pipe_top = gap_center_y + GAP_SIZE // 2
-    
-    # Đảm bảo coin ở giữa khoảng trống an toàn
-    safe_y = gap_center_y  # Vị trí trung tâm của khoảng trống
+def create_coin(gap_center_y=None):
+    """
+    Tạo coin ở giữa khoảng trống giữa 2 ống.
+    Nếu được truyền `gap_center_y` (tâm khoảng trống của 2 ống), coin sẽ sinh
+    ở vị trí an toàn bên trong khoảng trống đó. Nếu không có, vẫn sinh ngẫu
+    nhiên như trước (dùng một khoảng trống ngẫu nhiên).
+    """
+    GAP_SIZE = 260
+
+    # Nếu không có gap_center_y, tạo một khoảng trống ngẫu nhiên (fallback)
+    if gap_center_y is None:
+        GAP_CENTER_MIN = 250
+        GAP_CENTER_MAX = 550
+        gap_center_y = random.randint(GAP_CENTER_MIN, GAP_CENTER_MAX)
+
+    # Đặt coin trong "vùng an toàn" của khoảng trống để bird dễ nhặt:
+    # tránh quá gần mép ống bằng một khoảng offset nhỏ
+    coin_h = coin_surface.get_height() // 2
+    safe_offset = 20  # px từ mép ống
+    top_limit = gap_center_y - GAP_SIZE // 2 + coin_h + safe_offset
+    bottom_limit = gap_center_y + GAP_SIZE // 2 - coin_h - safe_offset
+
+    # Bảo đảm giới hạn hợp lệ
+    if top_limit > bottom_limit:
+        # Nếu khoảng trống quá nhỏ (không khả dụng), đặt coin ở trung tâm
+        safe_y = gap_center_y
+    else:
+        safe_y = random.randint(top_limit, bottom_limit)
+
     coin_rect = coin_surface.get_rect(center=(500, safe_y))
     return coin_rect
 
@@ -276,10 +291,12 @@ while True:
                     score = 0
                     passed_pipes.clear()
             if event.type == spawnpipe:
-                pipe_list.extend(create_pipe())
-                # Tạo coin cùng lúc với ống (50% cơ hội)
+                # Tạo 2 ống và nhận về vị trí tâm khoảng trống (gap_center_y)
+                bottom_pipe, top_pipe, gap_center_y = create_pipe()
+                pipe_list.extend((bottom_pipe, top_pipe))
+                # Tạo coin cùng lúc với ống (50% cơ hội) và đặt coin trong khoảng trống
                 if random.random() < 0.5:
-                    coin_list.append(create_coin())
+                    coin_list.append(create_coin(gap_center_y))
             if event.type == birdflap:
                 if bird_index < 2:
                     bird_index += 1

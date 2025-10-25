@@ -35,6 +35,36 @@ def draw_pipe(pipes):
         else:
             flip_pipe = pygame.transform.flip(pipe_surface,False,True)
             screen.blit(flip_pipe,pipe)
+
+# tạo coin ngẫu nhiên
+def create_coin():
+    # Tạo coin ở vị trí an toàn giữa ống trên và ống dưới
+    GAP_SIZE = 260  
+    GAP_CENTER_MIN = 250
+    GAP_CENTER_MAX = 550
+    gap_center_y = random.randint(GAP_CENTER_MIN, GAP_CENTER_MAX)
+    
+    # Tính toán vị trí an toàn cho coin
+    # Coin sẽ xuất hiện ở giữa khoảng trống, cách ống ít nhất 400 pixel
+    safe_margin = 400
+    top_pipe_bottom = gap_center_y - GAP_SIZE // 2
+    bottom_pipe_top = gap_center_y + GAP_SIZE // 2
+    
+    # Đảm bảo coin ở giữa khoảng trống an toàn
+    safe_y = gap_center_y  # Vị trí trung tâm của khoảng trống
+    coin_rect = coin_surface.get_rect(center=(500, safe_y))
+    return coin_rect
+
+# di chuyển coin
+def move_coins(coins):
+    for coin in coins:
+        coin.centerx -= 5
+    return coins
+
+# vẽ coin
+def draw_coins(coins):
+    for coin in coins:
+        screen.blit(coin_surface, coin)
             
 # kiếm tra va chạm
 def check_collision(pipes):
@@ -45,6 +75,21 @@ def check_collision(pipes):
     if bird_rect.top <= -75 or bird_rect.bottom >= 650:
         return False
     return True
+
+# kiểm tra va chạm với coin và thu thập
+def check_coin_collision(coins):
+    global score
+    collected_coins = []
+    for coin in coins:
+        if bird_rect.colliderect(coin):
+            collected_coins.append(coin)
+            score += 1
+            score_sound.play()
+    # Loại bỏ coin đã thu thập
+    for coin in collected_coins:
+        if coin in coins:
+            coins.remove(coin)
+    return coins
 
 # xoay chim
 def rotate_bird(bird1):
@@ -157,6 +202,7 @@ auth_message = ''
 username_input = None
 password_input = None
 focus = 'user'
+passed_pipes = set()  # Theo dõi các ống đã bay qua
 
 init_db()  # Đảm bảo DB sẵn sàng trước khi dùng
 
@@ -189,6 +235,11 @@ pipe_surface = pygame.image.load('assets/pipe-green.png').convert()
 pipe_surface = pygame.transform.scale2x(pipe_surface)
 pipe_list = []
 
+# Chèn coin
+coin_surface = pygame.image.load('assets/coin.png').convert_alpha()
+coin_surface = pygame.transform.scale(coin_surface, (50, 50))  # Tăng kích thước coin
+coin_list = []
+
 # Tạo timer sinh ống mới mỗi 1700ms
 spawnpipe = pygame.USEREVENT
 pygame.time.set_timer(spawnpipe, 1700) 
@@ -201,7 +252,6 @@ game_over_rect = game_over_surface.get_rect(center = (216,350))
 flap_sound = pygame.mixer.Sound('sound/sfx_wing.wav')
 hit_sound = pygame.mixer.Sound('sound/sfx_hit.wav')
 score_sound = pygame.mixer.Sound('sound/sfx_point.wav')
-score_sound_countdown = 100
 
 
 # VÒNG LẶP CHÍNH CUA
@@ -220,11 +270,16 @@ while True:
                 if event.key == pygame.K_SPACE and game_active==False:
                     game_active = True
                     pipe_list.clear()
+                    coin_list.clear()
                     bird_rect.center = (100,384)
                     bird_movement = 0
                     score = 0
+                    passed_pipes.clear()
             if event.type == spawnpipe:
                 pipe_list.extend(create_pipe())
+                # Tạo coin cùng lúc với ống (50% cơ hội)
+                if random.random() < 0.5:
+                    coin_list.append(create_coin())
             if event.type == birdflap:
                 if bird_index < 2:
                     bird_index += 1
@@ -268,9 +323,11 @@ while True:
         if play_clicked:
             # Reset trạng thái game và chuyển sang màn hình game
             pipe_list.clear()
+            coin_list.clear()
             bird_rect.center = (100,384)
             bird_movement = 0
             score = 0
+            passed_pipes.clear()
             game_active = True
             high_score = get_user_high_score(current_user) if current_user else 0
             screen_state = 'game'
@@ -370,12 +427,24 @@ while True:
             game_active = check_collision(pipe_list)
             pipe_list = move_pipes(pipe_list)
             draw_pipe(pipe_list)
-            score += 0.01
+            
+            # Xử lý coin
+            coin_list = move_coins(coin_list)
+            draw_coins(coin_list)
+            coin_list = check_coin_collision(coin_list)
+            
+            # Kiểm tra và cộng điểm khi bay qua ống
+            # Chỉ kiểm tra ống dưới (bottom pipe) để tránh cộng điểm 2 lần cho 1 cặp ống
+            for i, pipe in enumerate(pipe_list):
+                # Chỉ kiểm tra ống dưới (có bottom >= 600)
+                if pipe.bottom >= 600:  # Đây là ống dưới
+                    pipe_id = id(pipe)
+                    if pipe_id not in passed_pipes and bird_rect.centerx > pipe.centerx:
+                        passed_pipes.add(pipe_id)
+                        score += 1
+                        score_sound.play()
+            
             score_display('main game')
-            score_sound_countdown -= 1
-            if score_sound_countdown <= 0:
-                score_sound.play()
-                score_sound_countdown = 100
         else:
             # Trạng thái thua: hiển thị bảng điểm, cập nhật high score nếu có user
             screen.blit(game_over_surface,game_over_rect)
@@ -387,9 +456,11 @@ while True:
             to_menu = draw_button(screen, 'MENU', (216, 560))
             if replay:
                 pipe_list.clear()
+                coin_list.clear()
                 bird_rect.center = (100,384)
                 bird_movement = 0
                 score = 0
+                passed_pipes.clear()
                 game_active = True
             if to_menu:
                 screen_state = 'menu'

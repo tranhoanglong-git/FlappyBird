@@ -25,7 +25,7 @@ def create_pipe():
 # Di chuyển ống
 def move_pipes(pipes): 
     for pipe in pipes: 
-        pipe.centerx -= 5 # di chuyển ống về bên trái
+        pipe.centerx -= 5 
     return pipes
 
 # vẽ ống và ống lật ngược
@@ -138,7 +138,7 @@ small_font = pygame.font.Font('04B_19.ttf',20) # Font chứ nhỏ
 
 # PHẦN 2: HÀM HỖ TRỢ GIAO DIỆN (UI)
 def draw_text(surface, text, font, color, center): 
-    # Vẽ một dòng chữ ra màn hình tại vị trí center
+   # Vẽ một dòng chữ ra màn hình tại vị trí center
     txt = font.render(text, True, color) # tạo bề mặt chữ
     rect = txt.get_rect(center=center) # lấy rect chữ
     surface.blit(txt, rect) # vẽ chữ lên
@@ -256,7 +256,6 @@ flap_sound = pygame.mixer.Sound('sound/sfx_wing.wav')
 hit_sound = pygame.mixer.Sound('sound/sfx_hit.wav')
 score_sound = pygame.mixer.Sound('sound/sfx_point.wav')
 
-
 # VÒNG LẶP CHÍNH CUA
 while True:
     for event in pygame.event.get(): # lặp qua các sự kiện của game
@@ -310,22 +309,22 @@ while True:
     # VẼ CÁC MÀN HÌNH 
     if screen_state == 'menu':
         # Màn hình MENU chính: Play / Đăng nhập / Đăng kí / Bảng xếp hạng
-        draw_text(screen, 'FLAPPY BIRD', game_font, (255,255,255), (216, 150)) # tiêu đề
+        draw_text(screen, 'FLAPPY BIRD', game_font, (255,255,255), (216, 150)) # tiêu đề trang menu
         if current_user:
             draw_text(screen, f'Hello {current_user}', small_font, (255,255,0), (216, 210)) # chào người dùng đã đăng nhập
-        play_clicked = draw_button(screen, 'PLAY GAME', (216, 320)) # nút chơi game
+        play_clicked = draw_button(screen, 'PLAY GAME', (216, 320)) # nút chơi game ở trang menu
         # Ẩn LOGIN/REGISTER khi đã đăng nhập; thêm LOG OUT
         logout_clicked = False # khởi tạo biến logout_clicked
         if current_user:
-            login_clicked = False # ẩn nút login
-            register_clicked = False # ẩn nút register
-            lb_clicked = draw_button(screen, 'LEADERBOARD', (216, 385)) # nút bảng xếp hạng
-            logout_clicked = draw_button(screen, 'LOG OUT', (216, 450)) # nút đăng xuất
+            login_clicked = False # ẩn nút login ở trang menu khi login
+            register_clicked = False # ẩn nút register ở trang menu khi login
+            lb_clicked = draw_button(screen, 'LEADERBOARD', (216, 385)) # nút bảng xếp hạng ở trang menu khi login
+            logout_clicked = draw_button(screen, 'LOG OUT', (216, 450)) # nút đăng xuất ở trang menu khi login
         else:
-            login_clicked = draw_button(screen, 'LOGIN', (216, 385)) # nút đăng nhập
-            register_clicked = draw_button(screen, 'REGISTER', (216, 450)) # nút đăng kí
-            lb_clicked = draw_button(screen, 'LEADERBOARD', (216, 515)) # nút bảng xếp hạng 
-        if play_clicked:
+            login_clicked = draw_button(screen, 'LOGIN', (216, 385)) # nút đăng nhập ở menu
+            register_clicked = draw_button(screen, 'REGISTER', (216, 450)) # nút đăng kí ở menu
+            lb_clicked = draw_button(screen, 'LEADERBOARD', (216, 515)) # nút bảng xếp hạng ở menu
+        if play_clicked: # nếu nhấn nút chơi game
             # Reset trạng thái game và chuyển sang màn hình game
             pipe_list.clear() # xoá ống
             coin_list.clear() # xoá coin
@@ -336,43 +335,45 @@ while True:
             game_active = True # bắt đầu game
             high_score = get_user_high_score(current_user) if current_user else 0 # lấy điểm cao của người dùng hiện tại
             screen_state = 'game' # chuyển sang màn hình game
-        elif login_clicked:
+        elif lb_clicked: # nếu nhấn nút bảng xếp hạng
+            screen_state = 'leaderboard'  # chuyển sang màn hình leaderboard 
+        elif login_clicked: # nếu nhấn nút đăng nhập
             # Chuẩn bị 2 ô nhập liệu (username/password) cho màn hình đăng nhập
-            username_input = TextInput('username') # ô nhập username
+            username_input = TextInput('username') # ô nhập username 
             password_input = TextInput('password', is_password=True) # ô nhập password
-            username_input.set_center((216, 320)) # đặt vị trí ô username
-            password_input.set_center((216, 390)) # đặt vị trí ô password
-            focus = 'user' # đặt focus ban đầu vào ô username
+            username_input.set_center((216, 320)) # đặt vị trí ô username ở màn hình đăng nhập
+            password_input.set_center((216, 390)) # đặt vị trí ô password ở màn hình đăng nhập
+            focus = 'user' # đặt focus ban đầu vào ô username 
             auth_message = '' # xoá thông báo xác thực
-            screen_state = 'login' # chuyển sang màn hình đăng nhập
-        elif register_clicked:
+            screen_state = 'login' # chuyển sang màn hình đăng nhập 
+        elif register_clicked: # nếu nhấn nút đăng kí
             # Chuẩn bị ô nhập liệu cho màn hình đăng kí
             username_input = TextInput('username') # ô nhập username
             password_input = TextInput('password', is_password=True) # ô nhập password
-            username_input.set_center((216, 320)) # đặt vị trí ô username
-            password_input.set_center((216, 390)) # đặt vị trí ô password
-            focus = 'user' # đặt focus ban đầu vào ô username
+            username_input.set_center((216, 320)) # đặt vị trí ô username ở man hình đăng kí
+            password_input.set_center((216, 390)) # đặt vị trí ô password ở màn hình đăng kí
+            focus = 'user' # đặt focus ban đầu vào ô username 
             auth_message = ''
             screen_state = 'register' # chuyển sang màn hình đăng kí
-        elif logout_clicked:
+        elif logout_clicked: # nếu nhấn nút đăng xuất
             # Đăng xuất: xoá người dùng hiện tại, reset high_score trên màn hình
             logout_data = logout_user() # gọi hàm đăng xuất
             current_user = logout_data['current_user'] # lấy người dùng hiện tại (None)
             high_score = logout_data['high_score'] # đặt lại điểm cao
             auth_message = logout_data['auth_message'] # thông báo xác thực
 
-    elif screen_state == 'login': 
+    elif screen_state == 'login': # nếu đang ở màn hình đăng nhập
         # Màn hình ĐĂNG NHẬP
-        draw_text(screen, 'Login', game_font, (255,255,255), (216, 150)) # tiêu đề 
+        draw_text(screen, 'Login', game_font, (255,255,255), (216, 150)) # tiêu đề ở trang đăng nhập
         if username_input and password_input: 
             username_input.active = (focus == 'user') # đặt trạng thái active cho ô username
             password_input.active = (focus == 'pass') # đặt trạng thái active cho ô password
             username_input.draw(screen) # vẽ ô username
             password_input.draw(screen) # vẽ ô password
-        ok_clicked = draw_button(screen, 'CONFIRM', (216, 450)) # nút xác nhận
-        back_clicked = draw_button(screen, 'MENU', (216, 520))  # nút quay lại menu
-        draw_text(screen, auth_message, small_font, (255,200,200), (216, 250)) # thông báo xác thực
-        if ok_clicked and username_input and password_input:
+        ok_clicked = draw_button(screen, 'CONFIRM', (216, 450)) # nút xác nhận ở trang đăng nhập
+        back_clicked = draw_button(screen, 'MENU', (216, 580))  # nút quay lại menu ở trang đăng nhập
+        draw_text(screen, auth_message, small_font, (255,200,200), (216, 250)) # thông báo xác thực ở trang đăng nhập
+        if ok_clicked and username_input and password_input: # nếu nhấn nút xác nhận 
             # Thử đăng nhập -> thành công: về menu; thất bại: hiện thông báo
             if login_user(username_input.text, password_input.text):
                 current_user = username_input.text # đặt người dùng hiện tại
@@ -392,12 +393,12 @@ while True:
             password_input.active = (focus == 'pass') # đặt trạng thái active cho ô password
             username_input.draw(screen) # vẽ ô username
             password_input.draw(screen) # vẽ ô password
-        ok_clicked = draw_button(screen, 'CREATE ACCOUNT', (216, 450))         # nút tạo tài khoản
-        back_clicked = draw_button(screen, 'MENU', (216, 520))                 # nút quay lại menu
+        ok_clicked = draw_button(screen, 'CREATE ACCOUNT', (216, 450))         # nút tạo tài khoản ở trang đăng kí
+        back_clicked = draw_button(screen, 'MENU', (216, 580))                 # nút quay lại menu ở trang đăng kí
         draw_text(screen, auth_message, small_font, (255,200,200), (216, 250)) # thông báo xác thực
         if ok_clicked and username_input and password_input:
             # Thử đăng kí -> thành công: tự đăng nhập, về menu
-            ok, msg = register_user(username_input.text, password_input.text) # gọi hàm đăng kí
+            ok, msg = register_user(username_input.text, password_input.text) # gọi hàm đăng kí 
             auth_message = msg  # thông báo xác thực
             if ok:
                 current_user = username_input.text # đặt người dùng hiện tại
@@ -412,10 +413,36 @@ while True:
         rows = get_top_leaderboard(8) # lấy 8 người có điểm cao nhất
         y = 180   # vị trí y bắt đầu vẽ
         rank = 1  # xếp hạng bắt đầu từ 1
-        for name, hs in rows: # lặp qua từng người trong bảng xếp hạng
-            draw_text(screen, f"{rank}. {name} - {int(hs)}", small_font, (255,255,255), (216, y)) # vẽ tên và điểm cao
-            y += 45 # tăng y để vẽ người tiếp theo
-            rank += 1 # tăng hạng
+        # Tính toán căn giữa bảng xếp hạng
+        max_name_len = max((len(str(name)) for name, _ in rows), default=0)
+        max_score_len = max((len(str(int(hs))) for _, hs in rows), default=0)
+        table_width = 320  # chiều rộng bảng xếp hạng
+        x_start = (432 - table_width) // 2  # căn giữa theo chiều ngang màn hình 432px
+        name_col = x_start + 40
+        score_col = x_start + table_width - 80
+        for name, hs in rows:
+            # Định dạng: hạng. tên (căn trái)    điểm (căn phải)
+            rank_str = f"{rank}."
+            name_str = str(name)
+            score_str = str(int(hs))
+            # Vẽ thứ hạng
+            txt_rank = small_font.render(rank_str, True, (255,255,255))
+            rect_rank = txt_rank.get_rect()
+            rect_rank.topleft = (x_start, y)
+            screen.blit(txt_rank, rect_rank)
+            # Vẽ tên (căn trái)
+            txt_name = small_font.render(name_str, True, (255,255,255))
+            rect_name = txt_name.get_rect()
+            rect_name.topleft = (name_col, y)
+            screen.blit(txt_name, rect_name)
+            # Vẽ điểm (căn phải)
+            txt_score = small_font.render(score_str, True, (255,255,255))
+            rect_score = txt_score.get_rect()
+            rect_score.top = y
+            rect_score.right = score_col + 60
+            screen.blit(txt_score, rect_score)
+            y += 45
+            rank += 1
         back_clicked = draw_button(screen, 'MENU', (216, 600)) # nút quay lại menu
         if back_clicked:
             screen_state = 'menu' # về menu

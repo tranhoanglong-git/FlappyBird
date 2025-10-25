@@ -1,6 +1,8 @@
 import pygame, sys, random
-import sqlite3  
-import bcrypt  
+from login import init_db, login_user, get_user_high_score, update_user_high_score
+from register import register_user
+from leaderboard import get_top_leaderboard
+from logout import logout_user  
 
 # Tạo hàm cho game
 
@@ -82,82 +84,6 @@ screen = pygame.display.set_mode((432,768))
 clock = pygame.time.Clock()
 game_font = pygame.font.Font('04B_19.ttf',40)
 small_font = pygame.font.Font('04B_19.ttf',20)
-
-
-def init_db():
-    # Khởi tạo bảng users nếu chưa có
-    conn = sqlite3.connect('users.db')
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash BLOB NOT NULL,
-            high_score REAL DEFAULT 0
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-def register_user(username, password):
-    # Đăng kí: tạo tài khoản mới với username duy nhất, password được băm bằng bcrypt
-    if not username or not password:
-        return False, 'Missing username or password'
-    try:
-        pw_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    except Exception:
-        return False, 'Password encryption error'
-    try:
-        conn = sqlite3.connect('users.db')
-        cur = conn.cursor()
-        cur.execute("INSERT INTO users(username, password_hash) VALUES (?, ?)", (username, pw_hash))
-        conn.commit()
-        return True, 'Registration successful'
-    except sqlite3.IntegrityError:
-        return False, 'Name already exists'
-    finally:
-        conn.close()
-
-def login_user(username, password):
-    # Đăng nhập: kiểm tra username tồn tại và so khớp mật khẩu (checkpw)
-    conn = sqlite3.connect('users.db')
-    cur = conn.cursor()
-    cur.execute("SELECT password_hash FROM users WHERE username=?", (username,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
-        return False
-    try:
-        return bcrypt.checkpw(password.encode('utf-8'), row[0])
-    except Exception:
-        return False
-
-def get_user_high_score(username):
-    # Lấy điểm cao nhất của 1 người chơi
-    conn = sqlite3.connect('users.db')
-    cur = conn.cursor()
-    cur.execute("SELECT high_score FROM users WHERE username=?", (username,))
-    row = cur.fetchone()
-    conn.close()
-    return float(row[0]) if row else 0.0
-
-def update_user_high_score(username, new_score):
-    # Cập nhật điểm cao nhất (giữ giá trị lớn hơn giữa cũ và mới)
-    conn = sqlite3.connect('users.db')
-    cur = conn.cursor()
-    cur.execute("UPDATE users SET high_score = MAX(high_score, ?) WHERE username=?", (float(new_score), username))
-    conn.commit()
-    conn.close()
-
-def get_top_leaderboard(limit=10):
-    # Lấy danh sách top người chơi theo high_score (giảm dần)
-    conn = sqlite3.connect('users.db')
-    cur = conn.cursor()
-    cur.execute("SELECT username, high_score FROM users ORDER BY high_score DESC, id ASC LIMIT ?", (limit,))
-    rows = cur.fetchall()
-    conn.close()
-    return rows
-
 
 # PHẦN 2: HÀM HỖ TRỢ GIAO DIỆN (UI)
 def draw_text(surface, text, font, color, center):
@@ -370,9 +296,10 @@ while True:
             screen_state = 'leaderboard'
         elif logout_clicked:
             # Đăng xuất: xoá người dùng hiện tại, reset high_score trên màn hình
-            current_user = None
-            high_score = 0
-            auth_message = 'Logged out'
+            logout_data = logout_user()
+            current_user = logout_data['current_user']
+            high_score = logout_data['high_score']
+            auth_message = logout_data['auth_message']
 
     elif screen_state == 'login':
         # Màn hình ĐĂNG NHẬP

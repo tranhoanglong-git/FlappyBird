@@ -190,11 +190,15 @@ class TextInput:
 
     def draw(self, surface):
         # Vẽ khung input; nếu là password thì hiển thị dấu *
-        pygame.draw.rect(surface, (30,30,30), self.rect, border_radius=8) # nền ô nhập liệu
-        pygame.draw.rect(surface, (255,255,255), self.rect, width=2, border_radius=8) # viền ô nhập liệu
-        display_text = ('*' * len(self.text)) if (self.is_password and self.text) else (self.text or self.placeholder) # hiển thị dấu * nếu là mật khẩu
-        color = (255,255,255) if self.text else (150,150,150) # màu chữ
-        draw_text(surface, display_text, small_font, color, self.rect.center)  # vẽ chữ
+        bg_color = (50,50,70) if self.active else (30,30,30)  # màu nền sẽ sáng hơn khi focus
+        border_color = (100,149,237) if self.active else (255,255,255)  # màu viền xanh khi focus
+        border_width = 3 if self.active else 2  # viền dày hơn khi focus
+        
+        pygame.draw.rect(surface, bg_color, self.rect, border_radius=8) # vẽ nền
+        pygame.draw.rect(surface, border_color, self.rect, width=border_width, border_radius=8) # vẽ viền
+        display_text = ('*' * len(self.text)) if (self.is_password and self.text) else (self.text or self.placeholder) # hiển thị dấu * nếu là password
+        color = (255,255,255) if self.text else (150,150,150) # màu chữ 
+        draw_text(surface, display_text, small_font, color, self.rect.center) # vẽ chữ
 
 # BIẾN TRẠNG THÁI GAME
 gravity = 0.25 # trọng lực game 

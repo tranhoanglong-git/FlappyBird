@@ -307,7 +307,22 @@ while True:
                 if action2 == 'tab': # chuyển focus sang ô username
                     focus = 'user' # chuyển focus sang username
                 if action2 == 'submit': # nếu nhấn Enter
-                    pass
+                    # Thực hiện đăng nhập/đăng ký khi nhấn Enter ở ô password
+                    if screen_state == 'login':
+                        if login_user(username_input.text, password_input.text):
+                            current_user = username_input.text
+                            high_score = get_user_high_score(current_user)
+                            auth_message = 'Login successful'
+                            screen_state = 'menu'
+                        else:
+                            auth_message = 'Incorrect'
+                    elif screen_state == 'register':
+                        ok, msg = register_user(username_input.text, password_input.text)
+                        auth_message = msg
+                        if ok:
+                            current_user = username_input.text
+                            high_score = 0
+                            screen_state = 'menu'
         
     screen.blit(bg,(0,0))  # vẽ nền
 

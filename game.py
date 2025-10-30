@@ -111,16 +111,16 @@ def bird_animation():
 # hiển thị điểm số hiện tại và điểm cao
 def score_display(game_state):
     if game_state == 'main game': # hiển thị điểm khi chơi
-        score_surface = game_font.render(str(int(score)),True,(255,255,255)) # điểm hiện tại
-        score_rect = score_surface.get_rect(center = (216,100)) # vị trí điểm
+        score_surface = game_font.render(str(int(score)),True,(255,255,255)) # điểm hiện tại khi chơi
+        score_rect = score_surface.get_rect(center = (216,100)) # vị trí điểm khi chơi
         screen.blit(score_surface,score_rect) # vẽ điểm
     if game_state == 'game_over': # hiển thị điểm khi thua
-        score_surface = game_font.render(f'Score: {int(score)}',True,(255,255,255)) # điểm hiện tại
-        score_rect = score_surface.get_rect(center = (216,100)) # vị trí điểm
+        score_surface = game_font.render(f'Score: {int(score)}',True,(255,255,255)) # điểm hiện tại khi thua
+        score_rect = score_surface.get_rect(center = (216,100)) # vị trí điểm khi thua
         screen.blit(score_surface,score_rect) # vẽ điểm
     
-        high_score_surface = game_font.render(f'High Score: {int(high_score )}',True,(255,255,255)) # điểm cao
-        high_score_rect = high_score_surface.get_rect(center = (216,630)) # vị trí điểm cao
+        high_score_surface = game_font.render(f'High Score: {int(high_score )}',True,(255,255,255)) # điểm cao 
+        high_score_rect = high_score_surface.get_rect(center = (216,630)) # vị trí điểm cao 
         screen.blit(high_score_surface,high_score_rect) # vẽ điểm cao 
 
 # cập nhật điểm cao nhất nếu điểm hiện tại lớn hơn.
@@ -131,12 +131,13 @@ def update_score(score, high_score):
        
 pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=512) # Cấu hình âm thanh
 pygame.init() # Khởi động pygame
+pygame.display.set_caption("Flappy Bird")
 screen = pygame.display.set_mode((432,768)) # Kích thước màn hình game 
-clock = pygame.time.Clock() # Đồng hồ 
+clock = pygame.time.Clock() # Đồng hồ để kiểm soát FPS
 game_font = pygame.font.Font('04B_19.ttf',40) # Font chính
 small_font = pygame.font.Font('04B_19.ttf',20) # Font chứ nhỏ
 
-# PHẦN 2: HÀM HỖ TRỢ GIAO DIỆN (UI)
+# HÀM HỖ TRỢ GIAO DIỆN (UI)
 def draw_text(surface, text, font, color, center): 
    # Vẽ một dòng chữ ra màn hình tại vị trí center
     txt = font.render(text, True, color) # tạo bề mặt chữ
@@ -160,7 +161,7 @@ def draw_button(surface, text, center, size=(240, 50)):
     return clicked 
 
 class TextInput:
-    # Ô nhập liệu cực gọn cho username/password
+    # Ô nhập liệu cho username/password
     def __init__(self, placeholder='', is_password=False, width=300, height=50): # khởi tạo ô nhập liệu
         self.text = '' # văn bản nhập liệu
         self.placeholder = placeholder # văn bản gợi ý
@@ -502,4 +503,4 @@ while True:
         floor_x_pos = 0 # đặt lại vị trí sàn để tạo hiệu ứng vô hạn
 
     pygame.display.update() # cập nhật màn hình
-    clock.tick(120) # giới hạn 120 FPS
+    clock.tick(100) # giới hạn FPS
